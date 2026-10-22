@@ -28,3 +28,6 @@ The app migrates previous workout items in place, retaining logged sessions, mea
 - Choose any workout day when adding a machine from the library.
 - Custom exercise and removal dialogs use app-themed overlays, and library confirmations use a themed toast rather than file:// JavaScript alerts.
 - Workout page includes persistent music dock with transport controls (active-player support varies).
+
+## Now-playing dock (Android)
+The app now includes an opt-in media-session integration. On the Workout page, select **Enable now-playing information** and explicitly grant AtlasFit access in Android's Notification Access settings. This permission is broad; only grant it if you are comfortable with Android's access scope. AtlasFit queries active media sessions to display the available title, artist, app package and cover art. Playback buttons prefer the selected media session's native transport controls. The app does not send track metadata to an external server. Availability varies by player, including YouTube, and the feature may not display video titles when no compatible media session is published. Disable access any time in Android Settings.
