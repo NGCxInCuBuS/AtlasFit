@@ -12,6 +12,17 @@ import android.net.Uri;
 import android.media.AudioManager;
 import android.view.KeyEvent;
 import android.widget.Toast;
+import android.media.session.MediaSessionManager;
+import android.media.session.MediaController;
+import android.media.session.PlaybackState;
+import android.media.MediaMetadata;
+import android.content.ComponentName;
+import android.provider.Settings;
+import android.graphics.Bitmap;
+import android.util.Base64;
+import java.io.ByteArrayOutputStream;
+import java.util.List;
+import org.json.JSONObject;
 
 public class MainActivity extends Activity {
   private WebView web;
@@ -23,22 +34,76 @@ public class MainActivity extends Activity {
       getSharedPreferences("atlasfit",Context.MODE_PRIVATE).edit().putString("data",data).apply();
     }
   }
-  public class Music {
-    @JavascriptInterface public void control(String action) {
-      int key;
-      switch(action) {
-        case "previous": key=KeyEvent.KEYCODE_MEDIA_PREVIOUS; break;
-        case "next": key=KeyEvent.KEYCODE_MEDIA_NEXT; break;
-        default: key=KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE;
+  private MediaController activeController() {
+    try {
+      MediaSessionManager manager=(MediaSessionManager)getSystemService(Context.MEDIA_SESSION_SERVICE);
+      List<MediaController> sessions=manager.getActiveSessions(new ComponentName(this,MediaAccessService.class));
+      MediaController fallback=null;
+      for(MediaController controller:sessions) {
+        PlaybackState ps=controller.getPlaybackState();
+        if(ps!=null && ps.getState()==PlaybackState.STATE_PLAYING) return controller;
+        if(fallback==null && controller.getMetadata()!=null) fallback=controller;
       }
-      final int code=key;
+      return fallback;
+    } catch(Exception e) { return null; }
+  }
+  private boolean hasMediaAccess() {
+    String enabled=Settings.Secure.getString(getContentResolver(),"enabled_notification_listeners");
+    return enabled!=null && enabled.contains(getPackageName()+"/"+MediaAccessService.class.getName());
+  }
+  public class Music {
+    @JavascriptInterface public boolean permitted(){return hasMediaAccess();}
+    @JavascriptInterface public void requestAccess(){
+      runOnUiThread(()->startActivity(new Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)));
+    }
+    @JavascriptInterface public String status() {
+      JSONObject out=new JSONObject();
+      try {
+        out.put("permission",hasMediaAccess());
+        MediaController controller=activeController();
+        if(controller==null)return out.toString();
+        out.put("app",controller.getPackageName());
+        PlaybackState playback=controller.getPlaybackState();
+        out.put("playing",playback!=null && playback.getState()==PlaybackState.STATE_PLAYING);
+        MediaMetadata m=controller.getMetadata();
+        if(m!=null){
+          out.put("title",m.getString(MediaMetadata.METADATA_KEY_TITLE));
+          out.put("artist",m.getString(MediaMetadata.METADATA_KEY_ARTIST));
+          Bitmap art=m.getBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART);
+          if(art==null)art=m.getBitmap(MediaMetadata.METADATA_KEY_ART);
+          if(art!=null){
+            Bitmap scaled=Bitmap.createScaledBitmap(art,120,120,true);
+            ByteArrayOutputStream bytes=new ByteArrayOutputStream();
+            scaled.compress(Bitmap.CompressFormat.JPEG,65,bytes);
+            out.put("art","data:image/jpeg;base64,"+Base64.encodeToString(bytes.toByteArray(),Base64.NO_WRAP));
+            if(scaled!=art)scaled.recycle();
+          }
+        }
+      } catch(Exception e) { }
+      return out.toString();
+    }
+    @JavascriptInterface public void control(String action) {
       runOnUiThread(()->{
         try {
+          MediaController controller=activeController();
+          if(controller!=null) {
+            MediaController.TransportControls transport=controller.getTransportControls();
+            PlaybackState playback=controller.getPlaybackState();
+            switch(action) {
+              case "previous": transport.skipToPrevious(); return;
+              case "next": transport.skipToNext(); return;
+              default:
+                if(playback!=null && playback.getState()==PlaybackState.STATE_PLAYING) transport.pause();
+                else transport.play();
+                return;
+            }
+          }
           AudioManager manager=(AudioManager)getSystemService(Context.AUDIO_SERVICE);
-          manager.dispatchMediaKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN,code));
-          manager.dispatchMediaKeyEvent(new KeyEvent(KeyEvent.ACTION_UP,code));
+          int key=action.equals("previous")?KeyEvent.KEYCODE_MEDIA_PREVIOUS:action.equals("next")?KeyEvent.KEYCODE_MEDIA_NEXT:KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE;
+          manager.dispatchMediaKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN,key));
+          manager.dispatchMediaKeyEvent(new KeyEvent(KeyEvent.ACTION_UP,key));
         } catch(Exception e) {
-          Toast.makeText(MainActivity.this,"Music player unavailable",Toast.LENGTH_SHORT).show();
+          Toast.makeText(MainActivity.this,"Media controls unavailable",Toast.LENGTH_SHORT).show();
         }
       });
     }
