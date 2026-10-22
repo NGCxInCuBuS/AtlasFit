@@ -12,9 +12,9 @@ Offline-first Android gym tracker built for Planet Fitness routines, with an exp
 - Music panel with shortcuts to Spotify, YouTube Music, YouTube, SoundCloud and Pandora, and basic Android media-key play/pause/skip commands for the active player **when supported**.
 
 ## Media and image limitations
-The machine banners in this version are **original generated SVG illustrations**, not manufacturer photos or imported JPG/PNG assets. They are deliberately distinct per machine label and designed to work offline. Licensed model-specific machine photographs can be added in a later update once sources and reuse rights are verified. The catalog is not an exhaustive, verified inventory of any individual gym.
+Some machine banners now load real photographs from Wikimedia Commons over HTTPS (currently treadmill, elliptical, lat pulldown and leg press), with source credit links. Other equipment explicitly shows a **photo coming soon** placeholder rather than a misleading repeated icon. Photos need internet access; full offline JPG/PNG asset packaging and complete per-machine photography remain future work. The catalog is not an exhaustive, verified inventory of any individual gym.
 
-Music does **not** embed streaming services or request sign-in credentials. Music control depends on the Android media app and may not respond for every service or device. Links open the music provider externally.
+A music control dock is displayed at the top of the workout page. Music does **not** embed streaming services, show track metadata, or request sign-in credentials. Music control depends on the Android media app and may not respond for every service or device. Links open the music provider externally.
 
 ## Build APK
 GitHub Actions runs **Build AtlasFit APK** on pushes to main or manual dispatch. Open **Actions**, select the newest successful run, download **AtlasFit-debug-APK**, unzip, and install `app-debug.apk` on your Android phone.
@@ -23,3 +23,8 @@ The APK is a debug build for personal testing. Backup your data before uninstall
 
 ## Upgrading from v1
 The app migrates previous workout items in place, retaining logged sessions, measurements, and workout weights. It adds cardio fields and themes automatically. Export a backup before installing any new version.
+
+## Interface improvements
+- Choose any workout day when adding a machine from the library.
+- Custom exercise and removal dialogs use app-themed overlays, and library confirmations use a themed toast rather than file:// JavaScript alerts.
+- Workout page includes persistent music dock with transport controls (active-player support varies).
