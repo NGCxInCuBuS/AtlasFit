@@ -126,7 +126,12 @@ public class MainActivity extends Activity {
   @Override public void onCreate(Bundle b) {
     super.onCreate(b);
     web=new WebView(this);
-    web.setWebViewClient(new WebViewClient());
+    web.setWebViewClient(new WebViewClient(){
+      @Override public void onPageFinished(WebView view,String url){
+        super.onPageFinished(view,url);
+        view.evaluateJavascript("(function(){var s=document.createElement('script');s.src='file:///android_asset/media-dock.js';document.body.appendChild(s)})()",null);
+      }
+    });
     web.setWebChromeClient(new WebChromeClient());
     WebSettings settings=web.getSettings();
     settings.setJavaScriptEnabled(true);
