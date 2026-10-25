@@ -67,4 +67,4 @@ function restore(input){let f=input.files?.[0];if(!f)return;let r=new FileReader
 function reset(){if(confirm("Delete all AtlasFit data?")){state=initial();save();draw()}}
 function draw(){if(window.atlasBeforeDraw?.())return;styleTheme();document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("active",b.dataset.tab===tab));document.getElementById("view").innerHTML=({work,history,body,library,music,settings})[tab]();window.atlasAfterDraw?.()}
 save();draw();
-</script><script src="atlas-next.js"></script><script src="atlas-meals.js"></script></body></html>
+</script><script src="atlas-next.js"></script><script src="atlas-meals.js"></script><script src="atlas-dashboard.js"></script></body></html>
