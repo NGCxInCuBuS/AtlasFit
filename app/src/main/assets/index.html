@@ -58,6 +58,6 @@ function settings(){return '<h2>Appearance</h2><div class="card"><h3>Choose a th
 function backup(){let a=document.createElement("a");a.href="data:application/json;charset=utf-8,"+encodeURIComponent(JSON.stringify(state));a.download="atlasfit-backup.json";a.click()}
 function restore(input){let f=input.files?.[0];if(!f)return;let r=new FileReader();r.onload=()=>{try{let d=JSON.parse(r.result);if(!Array.isArray(d.plans)||!Array.isArray(d.history)||!Array.isArray(d.body))throw Error();if(confirm("Replace current data?")){state=d;save();draw()}}catch(e){alert("Invalid backup")}};r.readAsText(f)}
 function reset(){if(confirm("Delete all AtlasFit data?")){state=initial();save();draw()}}
-function draw(){styleTheme();document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("active",b.dataset.tab===tab));document.getElementById("view").innerHTML=({work,history,body,library,music,settings})[tab]()}
+function draw(){if(window.atlasBeforeDraw?.())return;styleTheme();document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("active",b.dataset.tab===tab));document.getElementById("view").innerHTML=({work,history,body,library,music,settings})[tab]();window.atlasAfterDraw?.()}
 save();draw();
-</script></body></html>
+</script><script src="atlas-next.js"></script></body></html>
